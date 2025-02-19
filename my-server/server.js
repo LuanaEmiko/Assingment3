@@ -73,10 +73,6 @@ app.get('/sites/:siteId', async (req, res) => {
     }
 });
 
-app.get(`/img/${file}`, (req,res) => {
-    res.sendFile(path.join(__dirname,`./img/${__filename}`))
-});
-
 app.use((req, res) => {
     res.status(404).sendFile(path.join(__dirname, '/views/404.html'));
 });
