@@ -9,13 +9,10 @@
     </head>
     <body>
         <% sites.forEach(function(site) { %>
-            <!-- Hero Section -->
             <div class="site mb-6">
                 <h1 class="text-3xl font-bold text-primary mb-4"><%= site.name %></h1>
                 <p class="text-lg font-semibold mb-6">Below, you will find detailed information about the site: <%= site.name %></p>
             </div>
-
-            <!-- Information Section -->
             <div class="container">
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
@@ -28,8 +25,6 @@
                         <p><strong>Region:</strong> <%= site.region %></p>
                         <p><strong>Geolocation:</strong> <%= site.latitude %>, <%= site.longitude %></p>
                         <p><strong>Designated:</strong> <%= site.designated %></p>
-
-                        <!-- Quote Section -->
                         <blockquote id="quote" class="bg-gray-200 p-4 rounded-lg mt-4 shadow-lg text-center">
                             <p class="text-xl font-semibold italic text-primary">"Loading quote..."</p>
                             <footer class="text-sm text-gray-600">- Unknown</footer>
@@ -40,8 +35,6 @@
                 </div>
             </div>
         <% }); %>
-
-        <!-- Quote Fetch Script -->
         <script>
             document.addEventListener("DOMContentLoaded", () => {
                 fetch('https://api.quotable.io/random')
