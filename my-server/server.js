@@ -18,10 +18,6 @@ const path = require('path');
 const HTTP_PORT = process.env.PORT || 8080;
 
 const { initialize, getAllSites, getSiteById, getSitesByProvinceOrTerritoryName, getSitesByRegion, getSitesBySubRegionName } = require('./data-service');
-
-require('pg'); // explicitly require the "pg" module
-const Sequelize = require('sequelize');
-
 app.set('view engine', 'ejs');
 app.use(express.static(__dirname + '/public'));
 app.set('views', __dirname + '/views');
@@ -44,66 +40,37 @@ app.get('/sites', async (req, res) => {
     try {
         const { region, provinceOrTerritory, subRegion } = req.query;
 
+        let sites = [];
+
         if (region) {
-            const sites = await getSitesByRegion(region);
-            return res.json(sites);
+            sites = await getSitesByRegion(region);
+        } else if (provinceOrTerritory) {
+            sites = await getSitesByProvinceOrTerritoryName(provinceOrTerritory);
+        } else if (subRegion) {
+            sites = await getSitesBySubRegionName(subRegion);
+        } else {
+            sites = await getAllSites();
         }
-
-        if (provinceOrTerritory) {
-            const sites = await getSitesByProvinceOrTerritoryName(provinceOrTerritory);
-            return res.json(sites);
-        }
-
-        if (subRegion) {
-            const sites = await getSitesBySubRegionName(subRegion);
-            return res.json(sites);
-        }
-
-        const sites = await getAllSites();
         res.render("sites", { sites });
 
     } catch (error) {
         console.error("Error fetching sites: " + error.message);
-        res.status(404).render("404");
-    }
-});
-
-app.get('/sites/:siteId', async (req, res) => {
-    try {
-        const site = await getSiteById(req.params.siteId);
-        res.json(site);
-    } catch (error) {
-        console.error("Error fetching site by ID: " + error.message);
-        res.status(404).render("404");
-    }
-});
-
-app.use((req, res) => {
-    res.status(404).render("404");
-});
-
-app.listen(HTTP_PORT, () => console.log(`Server listening on: ${HTTP_PORT}`));
-
-app.get("/sites", async (req, res) => {
-    try {
-        let sites = await getSites(req.query);
-        if (sites.length === 0) {
-            return res.status(404).render("404", { message: "No sites found for the specified region." });
-        }
-        res.render("sites", { sites });
-    } catch (error) {
         res.status(404).render("404", { message: "An error occurred while retrieving sites." });
     }
 });
 
 app.get("/sites/:id", async (req, res) => {
     try {
-        let site = await getSiteById(req.params.id);
+        const site = await getSiteById(req.params.id);
+
         if (!site) {
             return res.status(404).render("404", { message: "No site found with the specified ID." });
         }
+
         res.render("site", { site });
+
     } catch (error) {
+        console.error("Error fetching site by ID: " + error.message);
         res.status(404).render("404", { message: "An error occurred while retrieving the site." });
     }
 });
@@ -112,4 +79,4 @@ app.use((req, res) => {
     res.status(404).render("404", { message: "The page you are looking for does not exist." });
 });
 
-
+app.listen(HTTP_PORT, () => console.log(`Server listening on: ${HTTP_PORT}`));
