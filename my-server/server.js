@@ -1,14 +1,14 @@
 /********************************************************************************
-*  WEB322 – Assignment 03
+*  WEB322 – Assignment 04
 * 
 *  I declare that this assignment is my own work in accordance with Seneca's
 *  Academic Integrity Policy:
 * 
 *  https://www.senecacollege.ca/about/policies/academic-integrity-policy.html
 * 
-*  Name: Luana Emiko Silva Nakazo Student ID: 124231234 Date: 02/18/2025
+*  Name: Luana Emiko Silva Nakazo Student ID: 124231234 Date: 03/11/2025
 *
-*  Published (web app) URL: 
+*  Published URL: 
 *
 ********************************************************************************/
 
@@ -19,7 +19,12 @@ const HTTP_PORT = process.env.PORT || 8080;
 
 const { initialize, getAllSites, getSiteById, getSitesByProvinceOrTerritoryName, getSitesByRegion, getSitesBySubRegionName } = require('./data-service');
 
+require('pg'); // explicitly require the "pg" module
+const Sequelize = require('sequelize');
+
+app.set('view engine', 'ejs');
 app.use(express.static(__dirname + '/public'));
+app.set('views', __dirname + '/views');
 
 initialize().then(() => {
     console.log("Site data initialized successfully");
@@ -28,11 +33,11 @@ initialize().then(() => {
 });
 
 app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, '/views/home.html'));
+    res.render('home', { page: '/home' });
 });
 
 app.get('/about', (req, res) => {
-    res.sendFile(path.join(__dirname, '/views/about.html'));
+    res.render('about', { page: '/about' });
 });
 
 app.get('/sites', async (req, res) => {
@@ -55,11 +60,11 @@ app.get('/sites', async (req, res) => {
         }
 
         const sites = await getAllSites();
-        res.json(sites);
+        res.render("sites", { sites });
 
     } catch (error) {
         console.error("Error fetching sites: " + error.message);
-        res.status(404).send({ message: error.message });
+        res.status(404).render("404");
     }
 });
 
@@ -69,12 +74,42 @@ app.get('/sites/:siteId', async (req, res) => {
         res.json(site);
     } catch (error) {
         console.error("Error fetching site by ID: " + error.message);
-        res.status(404).sendFile(path.join(__dirname, '/views/404.html'));
+        res.status(404).render("404");
     }
 });
 
 app.use((req, res) => {
-    res.status(404).sendFile(path.join(__dirname, '/views/404.html'));
+    res.status(404).render("404");
 });
 
 app.listen(HTTP_PORT, () => console.log(`Server listening on: ${HTTP_PORT}`));
+
+app.get("/sites", async (req, res) => {
+    try {
+        let sites = await getSites(req.query);
+        if (sites.length === 0) {
+            return res.status(404).render("404", { message: "No sites found for the specified region." });
+        }
+        res.render("sites", { sites });
+    } catch (error) {
+        res.status(404).render("404", { message: "An error occurred while retrieving sites." });
+    }
+});
+
+app.get("/sites/:id", async (req, res) => {
+    try {
+        let site = await getSiteById(req.params.id);
+        if (!site) {
+            return res.status(404).render("404", { message: "No site found with the specified ID." });
+        }
+        res.render("site", { site });
+    } catch (error) {
+        res.status(404).render("404", { message: "An error occurred while retrieving the site." });
+    }
+});
+
+app.use((req, res) => {
+    res.status(404).render("404", { message: "The page you are looking for does not exist." });
+});
+
+
